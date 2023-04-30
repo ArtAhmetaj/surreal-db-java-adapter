@@ -8,15 +8,19 @@ import org.java_websocket.handshake.ServerHandshake;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
-import static com.surrealdb.websocket.models.RpcRequest.RpcRequestBuilder.aRpcRequest;
+import static com.surrealdb.database.models.DatabaseRequest.RpcRequestBuilder.aRpcRequest;
 
 public class RpcClientImpl extends WebSocketClient implements RpcClient {
-
+    private static final Logger logger = Logger.getLogger("RpcClientImpl");
     private static final int NORMAL_CLOSURE_CODE = 1000;
     private static final int DEFAULT_TIMEOUT = 30;
-    private final BlockingQueue<Object> responses;
+    private final BlockingQueue<String> responses;
     private final ObjectMapper objectMapper;
 
     public RpcClientImpl(URI serverUri, ObjectMapper objectMapper) {
@@ -27,17 +31,16 @@ public class RpcClientImpl extends WebSocketClient implements RpcClient {
     }
 
     @Override
-    public <T> T send(Object id, String method, Object[] params, Class<T> target) throws JsonProcessingException, InterruptedException {
-        var rpcRequest = aRpcRequest()
-                .setId(id)
-                .setMethod(method)
-                .setParams(params)
-                .build();
-
-        var serializedObject = objectMapper.writeValueAsString(rpcRequest);
+    public String send(Object request) throws JsonProcessingException, InterruptedException {
+        var serializedObject = objectMapper.writeValueAsString(request);
         this.send(serializedObject);
-        var result = responses.take();
-        return objectMapper.convertValue(result, target);
+        //TODO: get response by looking for id
+        return responses.take();
+    }
+
+    @Override
+    public  CompletableFuture<String> sendAsync(Object request) throws JsonProcessingException, InterruptedException {
+        return CompletableFuture.completedFuture(send(request));
     }
 
     @Override
@@ -52,24 +55,22 @@ public class RpcClientImpl extends WebSocketClient implements RpcClient {
 
     @Override
     public void onOpen(ServerHandshake serverHandshake) {
-        System.out.println("Connection established");
+        logger.log(new LogRecord(Level.FINE, "Connection established"));
     }
 
     @Override
     public void onMessage(String s) {
-        try {
-            var deserializedObject = objectMapper.readValue(s, Map.class);
-            this.responses.add(deserializedObject);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
+        this.responses.add(s);
     }
 
     @Override
     public void onClose(int code, String reason, boolean remote) {
-        System.out.println(
-                "Connection closed by " + (remote ? "remote peer" : "us") + " Code: " + code + " Reason: "
-                        + reason);
+        String closeInitiator = remote ? "remote peer" : "us";
+        var response = String.format("Connection closed by %s, Code: %s, Reason: %s",
+                closeInitiator,
+                code,
+                reason);
+        logger.log(new LogRecord(Level.FINE, response));
     }
 
     @Override

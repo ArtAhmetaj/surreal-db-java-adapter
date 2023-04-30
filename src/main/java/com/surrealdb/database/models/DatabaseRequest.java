@@ -1,10 +1,10 @@
-package com.surrealdb.websocket.models;
+package com.surrealdb.database.models;
 
-public class RpcRequest {
-    private final Object id;
+public class DatabaseRequest {
+    private final String id;
     private final boolean async;
 
-    public RpcRequest(Object id, boolean async, String method, Object[] params) {
+    public DatabaseRequest(String id, boolean async, String method, Object[] params) {
         this.id = id;
         this.async = async;
         this.method = method;
@@ -32,7 +32,7 @@ public class RpcRequest {
     private final Object[] params;
 
     public static final class RpcRequestBuilder {
-        private Object id;
+        private String id;
         private boolean async;
         private String method;
         private Object[] params;
@@ -44,7 +44,7 @@ public class RpcRequest {
             return new RpcRequestBuilder();
         }
 
-        public RpcRequestBuilder setId(Object id) {
+        public RpcRequestBuilder setId(String id) {
             this.id = id;
             return this;
         }
@@ -64,8 +64,8 @@ public class RpcRequest {
             return this;
         }
 
-        public RpcRequest build() {
-            return new RpcRequest(id, async, method, params);
+        public DatabaseRequest build() {
+            return new DatabaseRequest(id, async, method, params);
         }
     }
 }

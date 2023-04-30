@@ -1,6 +1,6 @@
-package com.surrealdb.websocket.models;
+package com.surrealdb.database.models;
 
-public class RpcError {
+public class DatabaseError {
     private final int code;
     private final String message;
 
@@ -12,7 +12,7 @@ public class RpcError {
         return message;
     }
 
-    public RpcError(int code, String message) {
+    public DatabaseError(int code, String message) {
         this.code = code;
         this.message = message;
     }

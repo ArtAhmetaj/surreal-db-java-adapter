@@ -1,6 +1,6 @@
-package com.surrealdb.websocket.models;
+package com.surrealdb.database.models;
 
-public class RpcNotification {
+public class DatabaseNotification {
     private final Object id;
     private final String method;
     private final Object[] params;
@@ -17,7 +17,7 @@ public class RpcNotification {
         return params;
     }
 
-    public RpcNotification(Object id, String method, Object[] params) {
+    public DatabaseNotification(Object id, String method, Object[] params) {
         this.id = id;
         this.method = method;
         this.params = params;
@@ -50,8 +50,8 @@ public class RpcNotification {
             return this;
         }
 
-        public RpcNotification build() {
-            return new RpcNotification(id, method, params);
+        public DatabaseNotification build() {
+            return new DatabaseNotification(id, method, params);
         }
     }
 }
