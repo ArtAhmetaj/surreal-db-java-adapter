@@ -1,8 +1,10 @@
 package com.surrealdb.database.models;
 
+import com.surrealdb.websocket.RpcObject;
+
 import java.util.Arrays;
 
-public class DatabaseRequest {
+public class DatabaseRequest implements RpcObject {
     private final String id;
     private final boolean async;
 
@@ -25,7 +27,7 @@ public class DatabaseRequest {
 
     private final String method;
 
-    public Object getId() {
+    public String getId() {
         return id;
     }
 
