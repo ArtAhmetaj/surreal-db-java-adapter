@@ -1,8 +1,20 @@
 package com.surrealdb.database.models;
 
+import java.util.Arrays;
+
 public class DatabaseRequest {
     private final String id;
     private final boolean async;
+
+    @Override
+    public String toString() {
+        return "DatabaseRequest{" +
+                "id='" + id + '\'' +
+                ", async=" + async +
+                ", method='" + method + '\'' +
+                ", params=" + Arrays.toString(params) +
+                '}';
+    }
 
     public DatabaseRequest(String id, boolean async, String method, Object[] params) {
         this.id = id;

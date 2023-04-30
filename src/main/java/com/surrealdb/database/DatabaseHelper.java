@@ -10,6 +10,8 @@ public class DatabaseHelper {
 
     }
 
+    private static final int DEFAULT_XID_LENGTH = 16;
+
     private static final String HEX_CHARS = "0123456789abcdef";
 
     public static String generateXid(int length) {
@@ -23,6 +25,10 @@ public class DatabaseHelper {
                     .append(HEX_CHARS.charAt(b & 0x0F));
         }
         return sb.toString();
+    }
+
+    public static String generateXid() {
+        return generateXid(DEFAULT_XID_LENGTH);
     }
 
 

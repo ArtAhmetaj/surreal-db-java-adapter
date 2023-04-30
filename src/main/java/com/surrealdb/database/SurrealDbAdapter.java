@@ -15,16 +15,20 @@ import java.util.Objects;
 
 public class SurrealDbAdapter {
 
-    public SurrealDbAdapter(RpcClient rpcClient) {
+    public SurrealDbAdapter(RpcClient rpcClient, ObjectMapper objectMapper) {
         this.rpcClient = rpcClient;
+        this.objectMapper = objectMapper;
     }
 
     public SurrealDbAdapter(URI uri) {
-        this.rpcClient = new RpcClientImpl(uri, new ObjectMapper());
+        this.rpcClient = new RpcClientImpl(uri);
+        this.objectMapper = new ObjectMapper();
+
     }
 
     private final RpcClient rpcClient;
 
+    private final ObjectMapper objectMapper;
 
     public void connect() {
         this.rpcClient.connect();
@@ -50,84 +54,72 @@ public class SurrealDbAdapter {
         return send(DatabaseCommandFactory.getParamsForSignIn(user, password));
     }
 
-//    public Object invalidate() {
-//        return send("invalidate");
-//    }
-//
-//    public Object authenticate(String token) {
-//        return send("authenticate", token);
-//    }
-//
-//    public Object live(String table) {
-//        return send("live", table);
-//    }
-//
-//    public Object kill(String query) {
-//        return send("kill", query);
-//    }
-//
-//    public Object let(String key, Object val) {
-//        return send("let", key, val);
-//    }
-//
-//    public Object query(String sql, Object vars) {
-//        return send("query", sql, vars);
-//    }
-//
-//    public Object select(String what) {
-//        return send("select", what);
-//    }
-//
-//    public Object create(String thing, Object data) {
-//        return send("create", thing, data);
-//    }
-//
-//    public Object update(String what, Object data) {
-//        return send("update", what, data);
-//    }
-//
-//    public Object change(String what, Object data) {
-//        return send("change", what, data);
-//    }
-//
-//    public Object modify(String what, List<Patch> data) {
-//        return send("modify", what, data);
-//    }
-//
-//    public Object delete(String what) {
-//        return send("delete", what);
-//    }
+    public DatabaseResponse invalidate() {
+        return send(DatabaseCommandFactory.getParamsForInvalidate());
+    }
+
+    public DatabaseResponse authenticate(String token) {
+        return send(DatabaseCommandFactory.getParamsForAuthenticate(token));
+    }
+
+    public DatabaseResponse live(String table) {
+        return send(DatabaseCommandFactory.getParamsForLive(table));
+    }
+
+    public DatabaseResponse kill(String query) {
+        return send(DatabaseCommandFactory.getParamsForKill(query));
+    }
+
+    public <T> DatabaseResponse let(String key, T val) {
+        return send(DatabaseCommandFactory.getParamsForLet(key, val));
+    }
+
+    //TODO: might be a map, the golang library implementation is unclear
+    public <T> DatabaseResponse query(String sql, T vars) {
+        return send(DatabaseCommandFactory.getParamsForQuery(sql, vars));
+    }
+
+    public DatabaseResponse select(String what) {
+        return send(DatabaseCommandFactory.getParamsForSelect(what));
+    }
+
+    public <T> DatabaseResponse create(String thing, T data) {
+        return send(DatabaseCommandFactory.getParamsForCreate(thing, data));
+    }
+
+    public <T> DatabaseResponse update(String what, T data) {
+        return send(DatabaseCommandFactory.getParamsForUpdate(what, data));
+    }
+
+
+    public <T> DatabaseResponse change(String what, T data) {
+        return send(DatabaseCommandFactory.getParamsForChange(what, data));
+    }
+
+    public DatabaseResponse modify(String what, List<Patch> data) {
+        return send(DatabaseCommandFactory.getParamsForModify(what, data));
+    }
+
+    public DatabaseResponse delete(String what) {
+        return send(DatabaseCommandFactory.getParamsForDelete(what));
+    }
 
 
     private DatabaseResponse send(
             DatabaseRequest request) {
         try {
-            var response = rpcClient.send(request);
-            if(Objects.equals(request.getMethod(), "delete")) {
+            var response = rpcClient.sendSocketRequest(objectMapper.writeValueAsString(request));
+            if (Objects.equals(request.getMethod(), "delete")) {
                 return null;
             }
-            return parseResponse(request.getParams(),response);
+            return objectMapper.readValue(response, DatabaseResponse.class);
         } catch (JsonProcessingException e) {
             throw new InvalidArgumentsException(e.getMessage());
         } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
+            Thread.currentThread().interrupt();
         }
         throw new InvalidArgumentsException("Invalid arguments");
     }
 
-    @SuppressWarnings("unchecked")
-    DatabaseResponse parseResponse(Object[] params, Object result) {
-        if (params.length == 0) throw new InvalidArgumentsException("No response found");
-        var arg = (String) params[0];
-        if (arg.contains(":")) {
-            var arrayResult = (List<Object>) result;
-            if (arrayResult.isEmpty()) {
-                throw new InvalidArgumentsException("No response found");
-            }
-            return (DatabaseResponse) arrayResult.get(0);
-
-        }
-        return (DatabaseResponse) result;
-    }
 
 }

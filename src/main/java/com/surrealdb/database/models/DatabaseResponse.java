@@ -1,12 +1,24 @@
 package com.surrealdb.database.models;
 
-public class DatabaseResponse{
-   private final String id;
-   private final DatabaseError error;
-   private final Object result;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public class DatabaseResponse {
+    private final String id;
+    private final DatabaseError error;
+    private final Object result;
 
     public Object getId() {
         return id;
+    }
+
+    @Override
+    public String toString() {
+        return "DatabaseResponse{" +
+                "id='" + id + '\'' +
+                ", error=" + error +
+                ", result=" + result +
+                '}';
     }
 
     public DatabaseError getError() {
@@ -17,41 +29,13 @@ public class DatabaseResponse{
         return result;
     }
 
-    public DatabaseResponse(String id, DatabaseError error, Object result) {
+    @JsonCreator
+    public DatabaseResponse(@JsonProperty("id") String id,
+                            @JsonProperty("error") DatabaseError error,
+                            @JsonProperty("result") Object result) {
         this.id = id;
         this.error = error;
         this.result = result;
     }
 
-    public static final class RpcResponseBuilder {
-        private String id;
-        private DatabaseError error;
-        private Object result;
-
-        private RpcResponseBuilder() {
-        }
-
-        public static  RpcResponseBuilder aRpcResponse() {
-            return new RpcResponseBuilder();
-        }
-
-        public  RpcResponseBuilder setId(String id) {
-            this.id = id;
-            return this;
-        }
-
-        public RpcResponseBuilder setError(DatabaseError error) {
-            this.error = error;
-            return this;
-        }
-
-        public RpcResponseBuilder setResult(Object result) {
-            this.result = result;
-            return this;
-        }
-
-        public Object DatabaseResponseBuild() {
-            return new DatabaseResponse(id, error, result);
-        }
-    }
 }

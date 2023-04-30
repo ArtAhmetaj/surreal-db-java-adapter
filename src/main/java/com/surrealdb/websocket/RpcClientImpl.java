@@ -14,34 +14,27 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import static com.surrealdb.database.models.DatabaseRequest.RpcRequestBuilder.aRpcRequest;
 
 public class RpcClientImpl extends WebSocketClient implements RpcClient {
     private static final Logger logger = Logger.getLogger("RpcClientImpl");
     private static final int NORMAL_CLOSURE_CODE = 1000;
     private static final int DEFAULT_TIMEOUT = 30;
     private final BlockingQueue<String> responses;
-    private final ObjectMapper objectMapper;
 
-    public RpcClientImpl(URI serverUri, ObjectMapper objectMapper) {
+    public RpcClientImpl(URI serverUri) {
         super(serverUri);
-        this.objectMapper = objectMapper;
         this.responses = new LinkedBlockingQueue<>(1);
         this.setConnectionLostTimeout(DEFAULT_TIMEOUT);
     }
 
+
     @Override
-    public String send(Object request) throws JsonProcessingException, InterruptedException {
-        var serializedObject = objectMapper.writeValueAsString(request);
-        this.send(serializedObject);
-        //TODO: get response by looking for id
+    public String sendSocketRequest(String request) throws InterruptedException {
+        this.send(request);
         return responses.take();
     }
 
-    @Override
-    public  CompletableFuture<String> sendAsync(Object request) throws JsonProcessingException, InterruptedException {
-        return CompletableFuture.completedFuture(send(request));
-    }
+
 
     @Override
     public void setTimeout(int timeout) {
